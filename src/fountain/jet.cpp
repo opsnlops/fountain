@@ -14,31 +14,17 @@ namespace fountain
 
     Jet::Jet()
     {
+        log_d("jet created");
     }
 
-    // QueueHandle_t Jet::getQueue()
-    //{
-    //     return commandQueue;
-    // }
-
-    void Jet::queueReaderTask(void *pvParamenters)
+    void Jet::setQueue(QueueHandle_t ourQueue)
     {
-        struct JetCommand currentCommand;
+        this->commandQueue = ourQueue;
+    }
 
-        for (;;)
-        {
-            if (xQueueReceive(commandQueue, &currentCommand, (TickType_t)pdMS_TO_TICKS(1000)) == pdPASS)
-            {
-                log_d("got a command");
-
-                switch (currentCommand.command)
-                {
-                case debug:
-                    log_d("DEBUG MESSAGE");
-                    break;
-                }
-            }
-        }
+    QueueHandle_t Jet::getQueue()
+    {
+        return commandQueue;
     }
 
 } // namespace fountain

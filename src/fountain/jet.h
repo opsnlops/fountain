@@ -7,40 +7,32 @@
 
 namespace fountain
 {
-    
 
+    enum CommandType
+    {
+        on,
+        paws,
+        color,
+        debug
+    };
 
+    // One command in the queue
+    struct JetCommand
+    {
+        CommandType command;
+        char data[MAX_COMMAND_LENGTH + 1];
+    } __attribute__((packed));
 
-enum CommandType
-{
-    on,
-    await,
-    color,
-    debug
-};
+    class Jet
+    {
 
-// One command in the queue
-struct JetCommand
-{
-    CommandType command;
-    char data[MAX_COMMAND_LENGTH + 1];
-} __attribute__((packed));
+    public:
+        Jet();
+        void setQueue(QueueHandle_t ourQueue);
+        QueueHandle_t getQueue();
 
-class Jet
-{
-
-public:
-    Jet();
-    void run(TaskHandle_t ourTask);
-
-    //QueueHandle_t getQueue();
-
-    static void queueReaderTask(void *pvParamenters);
-
-    static QueueHandle_t commandQueue;
-
-
-};
-
+    private:
+        QueueHandle_t commandQueue;
+    };
 
 } // namespace fountain
