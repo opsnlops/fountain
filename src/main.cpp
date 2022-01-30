@@ -19,14 +19,17 @@ extern "C"
 #include "network/connection.h"
 #include "fountain/jet.h"
 
+
 using namespace fountain;
+
+static const char* TAG = "Main";
 
 // Function Prototypes
 void createService();
 void jet1TaskRunner(void *pvParamenters);
 void messageSenderTask(void *pvParamenters);
 
-Jet jet1;
+Jet jet1 = Jet(1);
 
 void setup()
 {
@@ -37,14 +40,13 @@ void setup()
 
     // Nice long delay to let the terminal app start
     delay(2500);
-    log_i("Helllllo! I'm up and running on on %s!", ARDUINO_VARIANT);
+    ESP_LOGI(TAG, "Helllllo! I'm up and running on on %s!", ARDUINO_VARIANT);
 
     NetworkConnection network = NetworkConnection();
     network.connectToWiFi();
     createService();
-    //configTime(0, 3600, "10.3.2.6");
 
-    log_d("There are %d ticks in 100ms", pdMS_TO_TICKS(100));
+    ESP_LOGD(TAG, "There are %d ticks in 100ms", pdMS_TO_TICKS(100));
 
     jet1.setQueue(xQueueCreate(50, sizeof(struct JetCommand)));
     TaskHandle_t jet1Task;
@@ -80,14 +82,14 @@ void messageSenderTask(void *pvParamenters)
         struct JetCommand testCommand;
         testCommand.command = debug;
 
-        log_d("sending message");
+        ESP_LOGD(TAG, "sending message");
         xQueueSendToBack(jet1.getQueue(), &testCommand, pdMS_TO_TICKS(500));
 
         delay(1234);
         struct JetCommand testCommand2;
         testCommand2.command = paws;
 
-        log_d("sending message");
+        ESP_LOGD(TAG, "sending message");
         xQueueSendToBack(jet1.getQueue(), &testCommand2, pdMS_TO_TICKS(500));
     }
 }
@@ -100,38 +102,38 @@ void jet1TaskRunner(void *pvParamenters)
     {
         if (xQueueReceive(jet1.getQueue(), &currentCommand, (TickType_t)pdMS_TO_TICKS(1000)) == pdPASS)
         {
-            log_d("got a command");
+            ESP_LOGD(TAG, "got a command");
 
             switch (currentCommand.command)
             {
             case debug:
-                log_d("DEBUG MESSAGE");
+                ESP_LOGD(TAG, "DEBUG MESSAGE");
                 break;
             case paws:
-                log_d("PAUSE MESSAGE");
+                ESP_LOGD(TAG, "PAUSE MESSAGE");
                 break;
             }
         }
     }
 }
 
-
 void createService()
 {
 
     if (!MDNS.begin(CREATURE_NAME))
     {
-        log_e("Error setting up MDNS responder!");
+        ESP_LOGE(TAG, "Error setting up MDNS responder!");
         while (1)
         {
             delay(1000);
         }
     }
-    log_i("MDNS set up");
+    ESP_LOGI(TAG, "MDNS set up");
 
     // Register a fake server
     MDNS.addService("creatures", "tcp", 666);
-    MDNS.addServiceTxt("creatures", "tcp", "board", ARDUINO_VARIANT);
+    MDNS.addServiceTxt("creatures", "tcp", "variant", ARDUINO_VARIANT);
+    MDNS.addServiceTxt("creatures", "tcp", "board", ARDUINO_BOARD);
     MDNS.addServiceTxt("creatures", "tcp", "name", CREATURE_NAME);
-    log_d("created a fake service");
+    ESP_LOGI(TAG, "created a fake service");
 }
