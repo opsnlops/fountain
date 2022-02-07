@@ -20,6 +20,7 @@ extern "C"
 #include "mdns/creature-mdns.h"
 #include "time/time.h"
 
+using namespace std;
 using namespace creatures;
 using namespace fountain;
 
@@ -47,7 +48,7 @@ void setup()
     network.connectToWiFi();
 
     // Register ourselves in mDNS
-    CreatureMDNS creatureMDNS = CreatureMDNS(std::string(CREATURE_NAME));
+    CreatureMDNS creatureMDNS = CreatureMDNS(String(CREATURE_NAME));
     creatureMDNS.registerService(666);
     creatureMDNS.addStandardTags();
 
