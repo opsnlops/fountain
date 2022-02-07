@@ -21,6 +21,8 @@ extern "C"
 #include "time/time.h"
 
 using namespace creatures;
+using namespace fountain;
+
 
 static const char *TAG = "Main";
 

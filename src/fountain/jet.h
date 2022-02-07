@@ -3,50 +3,51 @@
 
 #include <Arduino.h>
 
-
 namespace creatures
 {
-
-    enum CommandType
-    {
-        on,
-        paws,
-        color,
-        height,
-        debug
-    };
-
-    // One command in the queue
-    struct JetCommand
-    {
-        uint8_t jet;
-        CommandType command;
-        uint32_t data;
-    } __attribute__((packed));
-
-    class Jet
+    namespace fountain
     {
 
-    public:
-        Jet(uint8_t number);
+        enum CommandType
+        {
+            on,
+            paws,
+            color,
+            height,
+            debug
+        };
 
-        uint8_t getNumber();
+        // One command in the queue
+        struct JetCommand
+        {
+            uint8_t jet;
+            CommandType command;
+            uint32_t data;
+        } __attribute__((packed));
 
-        void setPin(uint8_t pin);
-        uint8_t getPin();
+        class Jet
+        {
 
-        void setHeight(uint8_t height);
-        uint8_t getHeight();
+        public:
+            Jet(uint8_t number);
 
-        void setQueue(QueueHandle_t ourQueue);
-        QueueHandle_t getQueue();
+            uint8_t getNumber();
 
-    private:
-        uint8_t number;
-        uint8_t pin;
-        uint8_t height;
+            void setPin(uint8_t pin);
+            uint8_t getPin();
 
-        QueueHandle_t commandQueue;
-    };
+            void setHeight(uint8_t height);
+            uint8_t getHeight();
 
-} // namespace fountain
+            void setQueue(QueueHandle_t ourQueue);
+            QueueHandle_t getQueue();
+
+        private:
+            uint8_t number;
+            uint8_t pin;
+            uint8_t height;
+
+            QueueHandle_t commandQueue;
+        };
+    } // namespace fountain
+} // namespace creatures
