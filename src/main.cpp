@@ -15,12 +15,11 @@ extern "C"
 }
 
 #include "creature.h"
-#include "secrets.h"
 #include "network/connection.h"
 #include "fountain/jet.h"
 
 
-using namespace fountain;
+using namespace creatures;
 
 static const char* TAG = "Main";
 

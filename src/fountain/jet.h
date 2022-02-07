@@ -3,9 +3,8 @@
 
 #include <Arduino.h>
 
-#define MAX_COMMAND_LENGTH 20
 
-namespace fountain
+namespace creatures
 {
 
     enum CommandType
@@ -22,7 +21,7 @@ namespace fountain
     {
         uint8_t jet;
         CommandType command;
-        char data[MAX_COMMAND_LENGTH + 1];
+        uint32_t data;
     } __attribute__((packed));
 
     class Jet

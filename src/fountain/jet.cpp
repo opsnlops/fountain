@@ -9,7 +9,7 @@ extern "C"
 
 #include "jet.h"
 
-namespace fountain
+namespace creatures
 {
 
     Jet::Jet(uint8_t number)
