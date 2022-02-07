@@ -17,14 +17,14 @@ extern "C"
 #include "creature.h"
 #include "network/connection.h"
 #include "fountain/jet.h"
-
+#include "mdns/creature-mdns.h"
+#include "time/time.h"
 
 using namespace creatures;
 
-static const char* TAG = "Main";
+static const char *TAG = "Main";
 
 // Function Prototypes
-void createService();
 void jet1TaskRunner(void *pvParamenters);
 void messageSenderTask(void *pvParamenters);
 
@@ -43,9 +43,17 @@ void setup()
 
     NetworkConnection network = NetworkConnection();
     network.connectToWiFi();
-    createService();
+
+    // Register ourselves in mDNS
+    CreatureMDNS creatureMDNS = CreatureMDNS(std::string(CREATURE_NAME));
+    creatureMDNS.registerService(666);
+    creatureMDNS.addStandardTags();
 
     ESP_LOGD(TAG, "There are %d ticks in 100ms", pdMS_TO_TICKS(100));
+
+    Time time = Time();
+    time.init();
+    time.obtainTime();
 
     jet1.setQueue(xQueueCreate(50, sizeof(struct JetCommand)));
     TaskHandle_t jet1Task;
@@ -114,25 +122,4 @@ void jet1TaskRunner(void *pvParamenters)
             }
         }
     }
-}
-
-void createService()
-{
-
-    if (!MDNS.begin(CREATURE_NAME))
-    {
-        ESP_LOGE(TAG, "Error setting up MDNS responder!");
-        while (1)
-        {
-            delay(1000);
-        }
-    }
-    ESP_LOGI(TAG, "MDNS set up");
-
-    // Register a fake server
-    MDNS.addService("creatures", "tcp", 666);
-    MDNS.addServiceTxt("creatures", "tcp", "variant", ARDUINO_VARIANT);
-    MDNS.addServiceTxt("creatures", "tcp", "board", ARDUINO_BOARD);
-    MDNS.addServiceTxt("creatures", "tcp", "name", CREATURE_NAME);
-    ESP_LOGI(TAG, "created a fake service");
 }
