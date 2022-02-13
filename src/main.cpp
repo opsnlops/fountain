@@ -14,15 +14,19 @@ extern "C"
 #include "freertos/queue.h"
 }
 
-#include "creature.h"
-#include "network/connection.h"
 #include "fountain/jet.h"
-#include "mdns/creature-mdns.h"
-#include "time/time.h"
+#include "ota.h"
 
-using namespace std;
+#include "mqtt/mqtt.h"
+#include "network/connection.h"
+#include "creatures/creatures.h"
+#include "time/time.h"
+#include "mdns/creature-mdns.h"
+#include "mdns/magicbroker.h"
+
+#include "creature.h"
+
 using namespace creatures;
-using namespace fountain;
 
 
 static const char *TAG = "Main";
@@ -48,15 +52,33 @@ void setup()
     network.connectToWiFi();
 
     // Register ourselves in mDNS
-    CreatureMDNS creatureMDNS = CreatureMDNS(String(CREATURE_NAME));
+    CreatureMDNS creatureMDNS = CreatureMDNS(CREATURE_NAME);
     creatureMDNS.registerService(666);
     creatureMDNS.addStandardTags();
 
-    ESP_LOGD(TAG, "There are %d ticks in 100ms", pdMS_TO_TICKS(100));
+    digitalWrite(LED_BUILTIN, LOW);
 
     Time time = Time();
     time.init();
     time.obtainTime();
+
+    // Get the location of the magic broker
+    MagicBroker magicBroker;
+    magicBroker.find();
+
+    // Connect to MQTT
+    MQTT mqtt = MQTT(String(CREATURE_NAME));
+    mqtt.connect(magicBroker.ipAddress, magicBroker.port);
+    mqtt.subscribe(String("cmd"), 0);
+    //mqtt.onMessage(onMqttMessage);
+
+    // Enable OTA
+    setup_ota(String(CREATURE_NAME));
+    start_ota();
+
+    mqtt.publish(String("status"), String("I'm alive!!"), 0, false);
+
+    mqtt.startHeartbeat();
 
     jet1.setQueue(xQueueCreate(50, sizeof(struct JetCommand)));
     TaskHandle_t jet1Task;
