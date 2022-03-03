@@ -4,9 +4,6 @@
 
 #include <Arduino.h>
 
-#include <WiFi.h>
-#include <ESPmDNS.h>
-
 extern "C"
 {
 #include "freertos/FreeRTOS.h"
@@ -23,13 +20,15 @@ extern "C"
 #include "time/time.h"
 #include "mdns/creature-mdns.h"
 #include "mdns/magicbroker.h"
+#include "logging/logging.h"
 
 #include "creature.h"
 
 using namespace creatures;
 
-
-static const char *TAG = "Main";
+// Keep a link to our logger
+static Logger l;
+static MQTT mqtt = MQTT(String(CREATURE_NAME));
 
 // Function Prototypes
 void jet1TaskRunner(void *pvParamenters);
@@ -39,20 +38,14 @@ Jet jet1 = Jet(1);
 
 void setup()
 {
-    // Open serial communications and wait for port to open:
-    Serial.begin(19200);
-    while (!Serial)
-        ;
-
-    // Nice long delay to let the terminal app start
-    delay(2500);
-    ESP_LOGI(TAG, "Helllllo! I'm up and running on on %s!", ARDUINO_VARIANT);
+    l.init();
+    l.info("Helllllo! I'm up and running on on %s!", ARDUINO_VARIANT);
 
     NetworkConnection network = NetworkConnection();
     network.connectToWiFi();
 
     // Register ourselves in mDNS
-    CreatureMDNS creatureMDNS = CreatureMDNS(CREATURE_NAME);
+    CreatureMDNS creatureMDNS = CreatureMDNS(CREATURE_NAME, CREATURE_POWER);
     creatureMDNS.registerService(666);
     creatureMDNS.addStandardTags();
 
@@ -67,10 +60,8 @@ void setup()
     magicBroker.find();
 
     // Connect to MQTT
-    MQTT mqtt = MQTT(String(CREATURE_NAME));
     mqtt.connect(magicBroker.ipAddress, magicBroker.port);
     mqtt.subscribe(String("cmd"), 0);
-    //mqtt.onMessage(onMqttMessage);
 
     // Enable OTA
     setup_ota(String(CREATURE_NAME));
@@ -109,19 +100,19 @@ void messageSenderTask(void *pvParamenters)
 {
     for (;;)
     {
-        delay(500);
+        vTaskDelay(TickType_t pdMS_TO_TICKS(500));
 
         struct JetCommand testCommand;
         testCommand.command = debug;
 
-        ESP_LOGD(TAG, "sending message");
+        l.verbose("sending message");
         xQueueSendToBack(jet1.getQueue(), &testCommand, pdMS_TO_TICKS(500));
 
-        delay(1234);
+        vTaskDelay(TickType_t pdMS_TO_TICKS(1234));
         struct JetCommand testCommand2;
         testCommand2.command = paws;
 
-        ESP_LOGD(TAG, "sending message");
+        l.verbose("sending message");
         xQueueSendToBack(jet1.getQueue(), &testCommand2, pdMS_TO_TICKS(500));
     }
 }
@@ -134,15 +125,15 @@ void jet1TaskRunner(void *pvParamenters)
     {
         if (xQueueReceive(jet1.getQueue(), &currentCommand, (TickType_t)pdMS_TO_TICKS(1000)) == pdPASS)
         {
-            ESP_LOGD(TAG, "got a command");
+            l.verbose("got a command");
 
             switch (currentCommand.command)
             {
             case debug:
-                ESP_LOGD(TAG, "DEBUG MESSAGE");
+                l.verbose("DEBUG MESSAGE");
                 break;
             case paws:
-                ESP_LOGD(TAG, "PAUSE MESSAGE");
+                l.verbose("PAUSE MESSAGE");
                 break;
             }
         }
